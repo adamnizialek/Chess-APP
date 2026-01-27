@@ -319,7 +319,7 @@ export function Board({ gameState, onSquareClick, onMovePiece, flipped = false, 
   );
 
   return (
-    <div className="w-full max-w-[min(85vh,500px)] md:max-w-[min(85vh,580px)] lg:max-w-[min(85vh,750px)] xl:max-w-[min(85vh,850px)] aspect-square perspective-1000">
+    <div className="w-full h-full perspective-1000">
       <div
         ref={boardRef}
         className={`

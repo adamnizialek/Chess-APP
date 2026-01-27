@@ -2,7 +2,7 @@
 // GŁÓWNY KOMPONENT APLIKACJI SZACHOWEJ
 // ============================================
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useChessGame } from './hooks/useChessGame';
 import { useChessClock } from './hooks/useChessClock';
 import { ThemeProvider } from './context/ThemeContext';
@@ -14,11 +14,14 @@ import PromotionModal from './components/PromotionModal';
 import Sidebar from './components/Sidebar';
 import ChessClock from './components/ChessClock';
 import GameActions from './components/GameActions';
+import EvaluationBar from './components/EvaluationBar';
 import { RotateCcw, Lightbulb, Maximize2 } from 'lucide-react';
 import { useFullscreen } from './hooks/useFullscreen';
-import FullscreenBoard from './components/FullscreenBoard';
 import { TIME_CONTROLS } from './types/chess';
 import type { PieceColor } from './types/chess';
+
+// Lazy load FullscreenBoard - only needed when user enters fullscreen mode
+const FullscreenBoard = lazy(() => import('./components/FullscreenBoard'));
 
 /**
  * Zawartość gry - wydzielona, aby móc używać kontekstu motywu
@@ -186,8 +189,8 @@ function GameContent() {
       />
 
       {/* Nagłówek - obok przycisku menu */}
-      <header className="h-14 mt-4 pl-20 pr-4 flex items-center gap-4">
-        <a href="/" className="text-2xl md:text-3xl font-bold text-white tracking-tight hover:text-emerald-400 transition-colors">
+      <header className="fixed left-20 top-4 z-30 h-12 flex items-center gap-4">
+        <a href="/" className="text-2xl md:text-3xl font-bold text-white tracking-tight hover:text-emerald-400 transition-colors whitespace-nowrap">
           ♔ Szachy
         </a>
         {/* Komunikaty statusu */}
@@ -202,19 +205,24 @@ function GameContent() {
       </header>
 
       {/* Główna zawartość */}
-      <main className="container mx-auto px-4 pb-8">
+      <main className="container mx-auto px-4 pb-8 pt-16">
         <div className="flex flex-col lg:flex-row gap-6 items-start justify-center">
-          {/* Szachownica */}
+          {/* Szachownica z paskiem ewaluacji */}
           <div className="flex-shrink-0 w-full lg:w-auto flex flex-col items-center pt-6 md:pt-0">
-            <Board
-              gameState={gameState}
-              onSquareClick={selectSquare}
-              onMovePiece={movePiece}
-              flipped={isBoardFlipped}
-              premove={premove}
-              premoveSelection={premoveSelection}
-              hint={hint}
-            />
+            <div className="w-full max-w-[min(85vh,500px)] md:max-w-[min(85vh,580px)] lg:max-w-[min(85vh,750px)] xl:max-w-[min(85vh,850px)] grid grid-cols-[auto_1fr] gap-2">
+              <EvaluationBar board={gameState.board} flipped={isBoardFlipped} />
+              <div className="aspect-square">
+                <Board
+                  gameState={gameState}
+                  onSquareClick={selectSquare}
+                  onMovePiece={movePiece}
+                  flipped={isBoardFlipped}
+                  premove={premove}
+                  premoveSelection={premoveSelection}
+                  hint={hint}
+                />
+              </div>
+            </div>
             {/* Informacja o trybie gry i przycisk obrotu */}
             <div className="mt-2 flex items-center gap-2">
               <div className="px-3 py-1 rounded-full bg-slate-800/60 text-slate-400 text-xs flex items-center gap-2">
@@ -340,19 +348,21 @@ function GameContent() {
 
       {/* Fullscreen board overlay */}
       {isFullscreen && (
-        <FullscreenBoard
-          gameState={gameState}
-          actualGameState={actualGameState}
-          onSquareClick={selectSquare}
-          onMovePiece={movePiece}
-          onPromotePawn={promotePawn}
-          flipped={isBoardFlipped}
-          onFlipBoard={() => setIsBoardFlipped(!isBoardFlipped)}
-          onExit={exitFullscreen}
-          premove={premove}
-          premoveSelection={premoveSelection}
-          hint={hint}
-        />
+        <Suspense fallback={<div className="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center"><div className="text-white">Ładowanie...</div></div>}>
+          <FullscreenBoard
+            gameState={gameState}
+            actualGameState={actualGameState}
+            onSquareClick={selectSquare}
+            onMovePiece={movePiece}
+            onPromotePawn={promotePawn}
+            flipped={isBoardFlipped}
+            onFlipBoard={() => setIsBoardFlipped(!isBoardFlipped)}
+            onExit={exitFullscreen}
+            premove={premove}
+            premoveSelection={premoveSelection}
+            hint={hint}
+          />
+        </Suspense>
       )}
 
     </div>

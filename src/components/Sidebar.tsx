@@ -256,27 +256,22 @@ export function Sidebar({
               Kontrola czasu
             </h3>
 
-            <div className="space-y-2">
+            <div className="flex flex-wrap gap-2">
               {TIME_CONTROLS.map((tc) => (
                 <button
                   key={tc.id}
                   onClick={() => onTimeControlChange(tc)}
                   className={`
-                    w-full flex items-center gap-3 p-3 rounded-xl
+                    px-3 py-2 rounded-lg text-sm font-medium
                     transition-all duration-200
                     ${timeControl?.id === tc.id
-                      ? 'bg-orange-600/20 border-2 border-orange-500'
-                      : 'bg-slate-800/50 border-2 border-transparent hover:bg-slate-800 hover:border-slate-600'}
+                      ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/25'
+                      : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'}
                   `}
                 >
-                  <span className="flex-1 text-left font-medium text-slate-200">
-                    {tc.name}
-                  </span>
+                  {tc.name}
                   {tc.increment > 0 && (
-                    <span className="text-xs text-slate-500">+{tc.increment}s</span>
-                  )}
-                  {timeControl?.id === tc.id && (
-                    <Check className="w-5 h-5 text-orange-400" />
+                    <span className="ml-1 text-xs opacity-70">+{tc.increment}</span>
                   )}
                 </button>
               ))}
