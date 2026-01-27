@@ -5,7 +5,8 @@
 import { useEffect, useRef } from 'react';
 import type { Move } from '../types/chess';
 import { moveToAlgebraic } from '../engine/chessLogic';
-import { ChevronFirst, ChevronLast, ChevronLeft, ChevronRight, Search, X } from 'lucide-react';
+import { detectOpening } from '../engine/openings';
+import { ChevronFirst, ChevronLast, ChevronLeft, ChevronRight, Search, X, BookOpen } from 'lucide-react';
 
 interface MoveHistoryProps {
   moves: Move[];
@@ -159,6 +160,18 @@ export function MoveHistory({
           </p>
         </div>
       )}
+
+      {/* Nazwa otwarcia */}
+      {(() => {
+        const opening = detectOpening(moves);
+        if (!opening) return null;
+        return (
+          <div className="mb-3 px-2 py-1.5 bg-amber-600/20 rounded-lg border border-amber-600/30 flex items-center gap-2">
+            <BookOpen className="w-4 h-4 text-amber-400 flex-shrink-0" />
+            <p className="text-sm text-amber-200 font-medium">{opening}</p>
+          </div>
+        );
+      })()}
 
       {/* Lista ruchów */}
       <div ref={scrollRef} className="max-h-48 overflow-y-auto pr-2 space-y-1">
