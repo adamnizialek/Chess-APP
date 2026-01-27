@@ -2,7 +2,7 @@
 // KOMPONENT HISTORII RUCHÓW
 // ============================================
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import type { Move } from '../types/chess';
 import { moveToAlgebraic } from '../engine/chessLogic';
 import { detectOpening } from '../engine/openings';
@@ -52,6 +52,9 @@ export function MoveHistory({
       selectedMoveRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }, [viewIndex, analysisMode]);
+
+  // Wykryj otwarcie (memoizowane dla wydajności)
+  const opening = useMemo(() => detectOpening(moves), [moves]);
 
   // Grupuj ruchy w pary (biały, czarny)
   const movePairs: { number: number; white: string; black?: string; whiteIndex: number; blackIndex?: number }[] = [];
@@ -162,16 +165,12 @@ export function MoveHistory({
       )}
 
       {/* Nazwa otwarcia */}
-      {(() => {
-        const opening = detectOpening(moves);
-        if (!opening) return null;
-        return (
-          <div className="mb-3 px-2 py-1.5 bg-amber-600/20 rounded-lg border border-amber-600/30 flex items-center gap-2">
-            <BookOpen className="w-4 h-4 text-amber-400 flex-shrink-0" />
-            <p className="text-sm text-amber-200 font-medium">{opening}</p>
-          </div>
-        );
-      })()}
+      {opening && (
+        <div className="mb-3 px-2 py-1.5 bg-amber-600/20 rounded-lg border border-amber-600/30 flex items-center gap-2">
+          <BookOpen className="w-4 h-4 text-amber-400 flex-shrink-0" />
+          <p className="text-sm text-amber-200 font-medium">{opening}</p>
+        </div>
+      )}
 
       {/* Lista ruchów */}
       <div ref={scrollRef} className="max-h-48 overflow-y-auto pr-2 space-y-1">

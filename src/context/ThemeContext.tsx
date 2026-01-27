@@ -21,10 +21,14 @@ interface ThemeProviderProps {
 export function ThemeProvider({ children }: ThemeProviderProps) {
   const [theme, setThemeState] = useState<BoardTheme>(() => {
     // Próba odczytania zapisanego motywu z localStorage
-    const savedThemeId = localStorage.getItem('chess-theme');
-    if (savedThemeId) {
-      const savedTheme = availableThemes.find(t => t.id === savedThemeId);
-      if (savedTheme) return savedTheme;
+    try {
+      const savedThemeId = localStorage.getItem('chess-theme');
+      if (savedThemeId) {
+        const savedTheme = availableThemes.find(t => t.id === savedThemeId);
+        if (savedTheme) return savedTheme;
+      }
+    } catch {
+      // localStorage niedostępny (np. tryb prywatny)
     }
     return defaultTheme;
   });
@@ -33,7 +37,11 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     const newTheme = availableThemes.find(t => t.id === themeId);
     if (newTheme) {
       setThemeState(newTheme);
-      localStorage.setItem('chess-theme', themeId);
+      try {
+        localStorage.setItem('chess-theme', themeId);
+      } catch {
+        // localStorage niedostępny
+      }
     }
   }, []);
 

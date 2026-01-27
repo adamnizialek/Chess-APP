@@ -4,7 +4,13 @@
 // ============================================
 
 let audioContext: AudioContext | null = null;
-let isMuted: boolean = localStorage.getItem('chessSoundMuted') === 'true';
+let isMuted: boolean = (() => {
+  try {
+    return localStorage.getItem('chessSoundMuted') === 'true';
+  } catch {
+    return false;
+  }
+})();
 
 function getAudioContext(): AudioContext {
   if (!audioContext) {
@@ -20,7 +26,11 @@ export function isSoundMuted(): boolean {
 
 export function setSoundMuted(muted: boolean): void {
   isMuted = muted;
-  localStorage.setItem('chessSoundMuted', muted.toString());
+  try {
+    localStorage.setItem('chessSoundMuted', muted.toString());
+  } catch {
+    // localStorage niedostępny
+  }
 }
 
 export function toggleSoundMuted(): boolean {

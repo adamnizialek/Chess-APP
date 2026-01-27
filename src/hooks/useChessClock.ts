@@ -37,6 +37,7 @@ export function useChessClock(): UseChessClockReturn {
   const activePlayerRef = useRef<PieceColor>('white');
   const lastTickRef = useRef<number>(Date.now());
   const incrementRef = useRef<number>(0);
+  const lastIncrementedTurnRef = useRef<number>(0); // Zabezpieczenie przed podwójnym incrementem
 
   // Aktualizuj czas co 100ms
   useEffect(() => {
@@ -87,9 +88,17 @@ export function useChessClock(): UseChessClockReturn {
   const switchTurn = useCallback((newPlayer: PieceColor) => {
     if (!timeControl || timeControl.initialTime === 0) return;
 
-    // Dodaj increment poprzedniemu graczowi
+    const now = Date.now();
     const prevPlayer = activePlayerRef.current;
-    if (incrementRef.current > 0 && prevPlayer !== newPlayer) {
+
+    // Zabezpieczenie przed podwójnym wywołaniem (np. podczas premove)
+    // Minimum 50ms między incrementami
+    const canIncrement = incrementRef.current > 0 &&
+                         prevPlayer !== newPlayer &&
+                         (now - lastIncrementedTurnRef.current) > 50;
+
+    if (canIncrement) {
+      lastIncrementedTurnRef.current = now;
       setState((prev) => {
         const timeKey = prevPlayer === 'white' ? 'whiteTime' : 'blackTime';
         return {
@@ -100,13 +109,14 @@ export function useChessClock(): UseChessClockReturn {
     }
 
     activePlayerRef.current = newPlayer;
-    lastTickRef.current = Date.now();
+    lastTickRef.current = now;
   }, [timeControl]);
 
   const resetClock = useCallback((tc: TimeControl) => {
     setTimeControlState(tc);
     incrementRef.current = tc.increment;
     activePlayerRef.current = 'white';
+    lastIncrementedTurnRef.current = 0;
     setState({
       whiteTime: tc.initialTime,
       blackTime: tc.initialTime,

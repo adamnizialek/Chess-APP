@@ -18,8 +18,10 @@ import {
   makeMove,
   positionsEqual,
 } from '../engine/chessLogic';
-import { getAIMove, findBestMove } from '../engine/chessAI';
 import { playSound } from '../utils/sounds';
+
+// Dynamic import for chess AI - only loaded when needed
+const loadChessAI = () => import('../engine/chessAI');
 
 // Rozszerzony stan z historią i trybem analizy
 interface GameStateWithHistory {
@@ -317,7 +319,7 @@ export function useChessGame() {
   const [state, dispatch] = useReducer(gameReducer, null, initializeState);
 
   // Tryb gry i ustawienia AI
-  const [gameMode, setGameMode] = useState<GameMode>('pvp');
+  const [gameMode, setGameMode] = useState<GameMode>('ai');
   const [aiDifficulty, setAiDifficulty] = useState<AIDifficulty>('medium');
   const [playerColor, setPlayerColor] = useState<PieceColor>('white');
   const [isAIThinking, setIsAIThinking] = useState(false);
@@ -351,9 +353,13 @@ export function useChessGame() {
     }
 
     setIsAIThinking(true);
+    let cancelled = false;
 
     // Opóźnienie dla lepszego UX - symulacja "myślenia"
-    const timeoutId = setTimeout(() => {
+    const timeoutId = setTimeout(async () => {
+      const { getAIMove } = await loadChessAI();
+      if (cancelled) return;
+
       const aiMove = getAIMove(state.current, aiDifficulty);
 
       if (aiMove) {
@@ -363,7 +369,10 @@ export function useChessGame() {
       setIsAIThinking(false);
     }, 1000);
 
-    return () => clearTimeout(timeoutId);
+    return () => {
+      cancelled = true;
+      clearTimeout(timeoutId);
+    };
   }, [
     gameMode,
     state.current.currentPlayer,
@@ -536,7 +545,9 @@ export function useChessGame() {
   const resetGame = useCallback(() => {
     setPremove(null);
     setPremoveSelection(null);
+    hintCancelledRef.current = true;
     setHint(null);
+    setIsCalculatingHint(false);
     dispatch({ type: 'RESET_GAME' });
   }, []);
 
@@ -544,6 +555,9 @@ export function useChessGame() {
     setPremove(null);
     setPremoveSelection(null);
   }, []);
+
+  // Ref do anulowania obliczeń podpowiedzi
+  const hintCancelledRef = useRef(false);
 
   // Funkcja do pobierania podpowiedzi
   const getHint = useCallback(() => {
@@ -558,17 +572,24 @@ export function useChessGame() {
     }
 
     setIsCalculatingHint(true);
+    hintCancelledRef.current = false;
 
     // Oblicz najlepszy ruch (używamy depth 3 dla dobrej jakości)
-    setTimeout(() => {
+    setTimeout(async () => {
+      if (hintCancelledRef.current) return;
+      const { findBestMove } = await loadChessAI();
+      if (hintCancelledRef.current) return;
       const bestMove = findBestMove(state.current, 3);
+      if (hintCancelledRef.current) return;
       setHint(bestMove);
       setIsCalculatingHint(false);
     }, 100);
   }, [isCalculatingHint, isAIThinking, state.current, state.analysisMode]);
 
   const clearHint = useCallback(() => {
+    hintCancelledRef.current = true;
     setHint(null);
+    setIsCalculatingHint(false);
   }, []);
 
   const undoMove = useCallback(() => {
