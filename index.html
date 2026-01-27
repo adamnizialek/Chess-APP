@@ -7,12 +7,23 @@
     <meta name="description" content="Profesjonalna gra szachowa - React + TypeScript + Tailwind CSS" />
     <meta name="theme-color" content="#0f172a" />
     <title>Szachy - Gra Online</title>
+    <!-- Preload critical fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <!-- Inline critical CSS for fast FCP -->
+    <style>
+      body { margin: 0; background: linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a); min-height: 100vh; }
+      #root { display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+      .loader { color: white; font-size: 3rem; animation: pulse 1.5s infinite; }
+      @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Loading skeleton for fast FCP -->
+      <div class="loader">♔</div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -14,7 +14,9 @@ import PromotionModal from './components/PromotionModal';
 import Sidebar from './components/Sidebar';
 import ChessClock from './components/ChessClock';
 import GameActions from './components/GameActions';
-import { RotateCcw, Lightbulb } from 'lucide-react';
+import { RotateCcw, Lightbulb, Maximize2 } from 'lucide-react';
+import { useFullscreen } from './hooks/useFullscreen';
+import FullscreenBoard from './components/FullscreenBoard';
 import { TIME_CONTROLS } from './types/chess';
 import type { PieceColor } from './types/chess';
 
@@ -63,6 +65,9 @@ function GameContent() {
 
   // Stan obrotu szachownicy
   const [isBoardFlipped, setIsBoardFlipped] = useState(false);
+
+  // Fullscreen
+  const { isFullscreen, toggleFullscreen, exitFullscreen } = useFullscreen();
 
   // Zegar szachowy
   const {
@@ -251,6 +256,13 @@ function GameContent() {
               >
                 <RotateCcw className="w-4 h-4" />
               </button>
+              <button
+                onClick={toggleFullscreen}
+                className="p-1.5 rounded-full bg-slate-800/60 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
+                title="Pełny ekran"
+              >
+                <Maximize2 className="w-4 h-4" />
+              </button>
             </div>
           </div>
 
@@ -319,10 +331,27 @@ function GameContent() {
       </main>
 
       {/* Modal promocji piona */}
-      {actualGameState.promotionPending && (
+      {actualGameState.promotionPending && !isFullscreen && (
         <PromotionModal
           color={actualGameState.currentPlayer}
           onSelect={promotePawn}
+        />
+      )}
+
+      {/* Fullscreen board overlay */}
+      {isFullscreen && (
+        <FullscreenBoard
+          gameState={gameState}
+          actualGameState={actualGameState}
+          onSquareClick={selectSquare}
+          onMovePiece={movePiece}
+          onPromotePawn={promotePawn}
+          flipped={isBoardFlipped}
+          onFlipBoard={() => setIsBoardFlipped(!isBoardFlipped)}
+          onExit={exitFullscreen}
+          premove={premove}
+          premoveSelection={premoveSelection}
+          hint={hint}
         />
       )}
 

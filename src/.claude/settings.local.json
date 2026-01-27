@@ -9,7 +9,14 @@
       "Bash(git commit:*)",
       "Bash(git remote add:*)",
       "Bash(git branch:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(git remote:*)",
+      "Bash(git config:*)",
+      "Bash(git rebase:*)",
+      "Bash(git stash:*)",
+      "Bash(git filter-branch:*)",
+      "Bash(FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }
