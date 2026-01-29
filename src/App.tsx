@@ -11,6 +11,7 @@ import GameStatus from './components/GameStatus';
 import MoveHistory from './components/MoveHistory';
 import CapturedPieces from './components/CapturedPieces';
 import PromotionModal from './components/PromotionModal';
+import GameOverModal from './components/GameOverModal';
 import Sidebar from './components/Sidebar';
 import ChessClock from './components/ChessClock';
 import GameActions from './components/GameActions';
@@ -211,7 +212,7 @@ function GameContent() {
           <div className="flex-shrink-0 w-full lg:w-auto flex flex-col items-center pt-6 md:pt-0">
             <div className="w-full max-w-[min(85vh,500px)] md:max-w-[min(85vh,580px)] lg:max-w-[min(85vh,750px)] xl:max-w-[min(85vh,850px)] grid grid-cols-[auto_1fr] gap-2">
               <EvaluationBar board={gameState.board} flipped={isBoardFlipped} />
-              <div className="aspect-square">
+              <div className="aspect-square relative">
                 <Board
                   gameState={gameState}
                   onSquareClick={selectSquare}
@@ -221,6 +222,31 @@ function GameContent() {
                   premoveSelection={premoveSelection}
                   hint={hint}
                 />
+                {isGameOver && !analysisMode && !isFullscreen && (
+                  <GameOverModal
+                    winner={
+                      actualGameState.gameStatus === 'checkmate'
+                        ? (actualGameState.currentPlayer === 'white' ? 'black' : 'white')
+                        : resignedColor
+                        ? (resignedColor === 'white' ? 'black' : 'white')
+                        : timeOutColor
+                        ? (timeOutColor === 'white' ? 'black' : 'white')
+                        : null
+                    }
+                    reason={
+                      actualGameState.gameStatus === 'checkmate' ? 'checkmate'
+                        : actualGameState.gameStatus === 'stalemate' ? 'stalemate'
+                        : resignedColor ? 'resignation'
+                        : timeOutColor ? 'timeout'
+                        : 'draw'
+                    }
+                    onNewGame={() => {
+                      resetGame();
+                      if (timeControl) resetClock(timeControl);
+                    }}
+                    onAnalysis={enterAnalysis}
+                  />
+                )}
               </div>
             </div>
             {/* Informacja o trybie gry i przycisk obrotu */}
