@@ -154,7 +154,7 @@ export function Board({ gameState, onSquareClick, onMovePiece, flipped = false, 
     return { row, col };
   }, [flipped]);
 
-  // Śledzenie pozycji myszy podczas przeciągania
+  // Śledzenie pozycji myszy/dotyku podczas przeciągania
   const isDraggingActive = dragState !== null;
   useEffect(() => {
     if (!isDraggingActive) return;
@@ -173,7 +173,39 @@ export function Board({ gameState, onSquareClick, onMovePiece, flipped = false, 
         const targetPosition = getSquareFromMouse(e.clientX, e.clientY);
 
         if (targetPosition) {
-          // Sprawdź czy ruch jest dozwolony
+          const isValid = validMoves.some(move =>
+            positionsEqual(move, targetPosition)
+          );
+
+          if (isValid) {
+            onMovePiece(draggedFrom, targetPosition);
+          }
+        }
+      }
+
+      setDraggedFrom(null);
+      setDragState(null);
+    };
+
+    // Obsługa dotyku - przesuwanie
+    const handleTouchMove = (e: TouchEvent) => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      setDragState(prev => prev ? {
+        ...prev,
+        mouseX: touch.clientX,
+        mouseY: touch.clientY,
+      } : null);
+    };
+
+    // Obsługa dotyku - upuszczenie
+    const handleTouchEnd = (e: TouchEvent) => {
+      e.preventDefault();
+      const touch = e.changedTouches[0];
+      if (draggedFrom) {
+        const targetPosition = getSquareFromMouse(touch.clientX, touch.clientY);
+
+        if (targetPosition) {
           const isValid = validMoves.some(move =>
             positionsEqual(move, targetPosition)
           );
@@ -190,9 +222,13 @@ export function Board({ gameState, onSquareClick, onMovePiece, flipped = false, 
 
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd, { passive: false });
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
     };
   }, [isDraggingActive, draggedFrom, validMoves, onMovePiece, getSquareFromMouse]);
 
@@ -266,6 +302,30 @@ export function Board({ gameState, onSquareClick, onMovePiece, flipped = false, 
       setDragState(null);
     },
     []
+  );
+
+  // Obsługa rozpoczęcia przeciągania dotykiem (mobile)
+  const handleTouchStart = useCallback(
+    (position: Position) => (e: React.TouchEvent) => {
+      const piece = board[position.row][position.col];
+      if (!piece || piece.color !== currentPlayer) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      const touch = e.touches[0];
+
+      setDraggedFrom(position);
+      onSquareClick(position);
+
+      setDragState({
+        piece,
+        from: position,
+        mouseX: touch.clientX,
+        mouseY: touch.clientY,
+      });
+    },
+    [board, currentPlayer, onSquareClick]
   );
 
   // Obsługa kliknięcia w pole
@@ -377,6 +437,7 @@ export function Board({ gameState, onSquareClick, onMovePiece, flipped = false, 
                 onDragEnd={handleDragEnd}
                 onDragOver={handleDragOver}
                 onDrop={handleDrop(position)}
+                onTouchStart={handleTouchStart(position)}
                 flipped={flipped}
               />
             );

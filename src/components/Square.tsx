@@ -25,6 +25,7 @@ interface SquareProps {
   onDragEnd: () => void;
   onDragOver: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent) => void;
+  onTouchStart: (e: React.TouchEvent) => void;
   flipped?: boolean;
 }
 
@@ -56,6 +57,7 @@ export function Square({
   onDragEnd,
   onDragOver,
   onDrop,
+  onTouchStart,
   flipped = false,
 }: SquareProps) {
   const { theme } = useTheme();
@@ -141,7 +143,8 @@ export function Square({
             draggable
             onDragStart={onDragStart}
             onDragEnd={onDragEnd}
-            className="w-full h-full cursor-grab active:cursor-grabbing"
+            onTouchStart={onTouchStart}
+            className="w-full h-full cursor-grab active:cursor-grabbing touch-none"
           >
             <Piece piece={piece} />
           </div>
